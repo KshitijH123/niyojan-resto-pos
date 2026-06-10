@@ -6,9 +6,8 @@ import {
   History,
   Settings as SettingsIcon,
   LogOut,
-  ChefHat,
 } from "lucide-react";
-import { useAuth, useData } from "@/lib/store";
+import { useAuth } from "@/lib/store";
 
 const items = [
   { to: "/dashboard", labelMr: "डॅशबोर्ड", labelEn: "Dashboard", icon: LayoutDashboard },
@@ -21,19 +20,16 @@ const items = [
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const logout = useAuth((s) => s.logout);
-  const name = useData((s) => s.settings.restaurantName);
   const navigate = useNavigate();
 
   return (
     <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
-      <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
-        <div className="size-10 rounded-full bg-sidebar-primary flex items-center justify-center">
-          <ChefHat className="size-5 text-sidebar-primary-foreground" />
-        </div>
-        <div>
-          <div className="font-bold leading-tight">{name}</div>
-          <div className="text-xs opacity-70">Billing Software</div>
-        </div>
+      <div className="border-b border-sidebar-border">
+        <img
+          src="/niyojan-logo.png"
+          alt="Niyojan Resto Logo"
+          className="w-full object-contain"
+        />
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {items.map((it) => {

@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus, Minus, Trash2, Printer, Save, X, Search } from "lucide-react";
 import { useData, type BillItem, type Bill } from "@/lib/store";
-import { CATEGORIES } from "@/lib/menu-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -15,6 +14,7 @@ export const Route = createFileRoute("/_authed/billing")({
 
 function BillingPage() {
   const menu = useData((s) => s.menu);
+  const categories = useData((s) => s.categories);
   const settings = useData((s) => s.settings);
   const saveBill = useData((s) => s.saveBill);
 
@@ -27,7 +27,7 @@ function BillingPage() {
   const [payment, setPayment] = useState<"Cash" | "UPI" | "Card">("Cash");
   const [lastBill, setLastBill] = useState<Bill | null>(null);
 
-  const cats = ["All", ...Array.from(new Set([...CATEGORIES, ...menu.map((m) => m.category)]))];
+  const cats = ["All", ...categories];
 
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();

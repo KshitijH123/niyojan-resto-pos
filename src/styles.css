@@ -97,7 +97,10 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -107,8 +110,15 @@
 
 /* Thermal receipt print styles */
 @media print {
-  body * { visibility: hidden; }
-  .receipt, .receipt * { visibility: visible; }
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt,
+  .receipt * {
+    visibility: visible;
+  }
+
   .receipt {
     position: absolute;
     left: 0;
@@ -120,5 +130,8 @@
     font-family: "Courier New", ui-monospace, monospace;
     font-size: 12px;
   }
-  .no-print { display: none !important; }
+
+  .no-print {
+    display: none !important;
+  }
 }

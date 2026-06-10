@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_MENU, type MenuItem } from "./menu-data";
+import { DEFAULT_MENU, DEFAULT_CATEGORIES, type MenuItem } from "./menu-data";
 
 export type BillItem = {
   itemId: string;
@@ -62,17 +62,22 @@ type DataState = {
   bills: Bill[];
   nextBillNo: number;
   settings: Settings;
+  categories: string[];
   addMenuItem: (i: Omit<MenuItem, "id">) => void;
   updateMenuItem: (id: string, patch: Partial<MenuItem>) => void;
   deleteMenuItem: (id: string) => void;
   saveBill: (b: Omit<Bill, "id" | "billNo" | "date">) => Bill;
   updateSettings: (s: Partial<Settings>) => void;
+  addCategory: (name: string) => void;
+  renameCategory: (oldName: string, newName: string) => void;
+  deleteCategory: (name: string) => void;
 };
 
 export const useData = create<DataState>()(
   persist(
     (set, get) => ({
       menu: DEFAULT_MENU,
+      categories: DEFAULT_CATEGORIES,
       bills: [],
       nextBillNo: 1001,
       settings: {
@@ -103,6 +108,20 @@ export const useData = create<DataState>()(
       },
       updateSettings: (s) =>
         set((st) => ({ settings: { ...st.settings, ...s } })),
+      addCategory: (name) =>
+        set((s) => ({
+          categories: s.categories.includes(name) ? s.categories : [...s.categories, name],
+        })),
+      renameCategory: (oldName, newName) =>
+        set((s) => ({
+          categories: s.categories.map((c) => (c === oldName ? newName : c)),
+          menu: s.menu.map((m) => (m.category === oldName ? { ...m, category: newName } : m)),
+        })),
+      deleteCategory: (name) =>
+        set((s) => ({
+          categories: s.categories.filter((c) => c !== name),
+          menu: s.menu.filter((m) => m.category !== name),
+        })),
     }),
     { name: "niyojan-data" },
   ),

@@ -7,7 +7,7 @@ export type MenuItem = {
   full: number;
 };
 
-export const CATEGORIES = [
+export const DEFAULT_CATEGORIES: string[] = [
   "थाळी",
   "व्हेज डिशेस",
   "काजू पनीर डिशेस",
@@ -18,7 +18,7 @@ export const CATEGORIES = [
   "तंदूर",
   "बिर्याणी",
   "मासे",
-] as const;
+];
 
 let _id = 0;
 const mk = (
