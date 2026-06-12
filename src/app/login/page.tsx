@@ -1,25 +1,22 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+"use client";
+
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Login — Niyojan Resto Billing" }] }),
-  component: LoginPage,
-});
-
-function LoginPage() {
-  const navigate = useNavigate();
+export default function LoginPage() {
+  const router = useRouter();
   const { login, isAuthed } = useAuth();
   const [u, setU] = useState("admin");
   const [p, setP] = useState("admin");
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    if (isAuthed) navigate({ to: "/dashboard" });
-  }, [isAuthed, navigate]);
+    if (isAuthed) router.push("/dashboard");
+  }, [isAuthed, router]);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-[#0a1e16]">
@@ -50,7 +47,7 @@ function LoginPage() {
             className="space-y-6"
             onSubmit={(e) => {
               e.preventDefault();
-              if (login(u, p)) navigate({ to: "/dashboard" });
+              if (login(u, p)) router.push("/dashboard");
               else setErr("Invalid credentials");
             }}
           >

@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useMemo, useState } from "react";
 import { Plus, Minus, Trash2, Printer, Save, X, Search } from "lucide-react";
 import { useData, type BillItem, type Bill } from "@/lib/store";
@@ -7,12 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Receipt } from "@/components/receipt";
 
-export const Route = createFileRoute("/_authed/billing")({
-  head: () => ({ meta: [{ title: "Billing — Niyojan Resto" }] }),
-  component: BillingPage,
-});
-
-function BillingPage() {
+export default function BillingPage() {
   const menu = useData((s) => s.menu);
   const categories = useData((s) => s.categories);
   const settings = useData((s) => s.settings);
@@ -87,11 +83,12 @@ function BillingPage() {
       paymentType: payment,
     });
     setLastBill(bill);
-    if (alsoPrint) setTimeout(() => window.print(), 100);
+    if (alsoPrint) setTimeout(() => window.print(), 500);
   };
 
   return (
-    <div className="p-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 no-print">
+    <>
+      <div className="p-2 md:p-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4 md:gap-6 no-print">
       <div className="space-y-4">
         <div>
           <h1 className="text-3xl font-bold">बिलिंग / Billing</h1>
@@ -139,7 +136,7 @@ function BillingPage() {
                   </Button>
                 )}
                 <Button size="sm" className="flex-1" onClick={() => addItem(m.id, "full")}>
-                  फुल ₹{m.full}
+                  ₹{m.full}
                 </Button>
               </div>
             </Card>
@@ -248,8 +245,9 @@ function BillingPage() {
         )}
       </Card>
 
+      </div>
       {lastBill && <Receipt bill={lastBill} settings={settings} />}
-    </div>
+    </>
   );
 }
 

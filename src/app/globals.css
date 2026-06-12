@@ -1,5 +1,4 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -110,28 +109,70 @@
 
 /* Thermal receipt print styles */
 @media print {
-  body * {
-    visibility: hidden;
+  @page {
+    margin: 0;
+    size: 80mm auto;
   }
 
-  .receipt,
-  .receipt * {
-    visibility: visible;
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    width: 100% !important;
+  }
+
+  /* Hide everything except the receipt during print */
+  .no-print {
+    display: none !important;
+  }
+
+  .receipt-container {
+    display: flex !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+    min-height: 0 !important;
+    width: 100% !important;
   }
 
   .receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    padding: 4mm;
-    color: #000;
-    background: #fff;
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 12px;
+    display: block !important;
+    width: 72mm !important;
+    /* Standard for 80mm printers */
+    margin: 0 !important;
+    padding: 3mm !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: #000 !important;
+    font-family: system-ui, sans-serif !important;
+    font-size: 16px !important;
   }
 
-  .no-print {
-    display: none !important;
+  .receipt-logo {
+    display: block !important;
+    margin: 0 auto 3mm !important;
+    max-width: 65mm !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Specific typography for print */
+  .receipt-header-name {
+    font-size: 28px !important;
+    font-weight: 900 !important;
+  }
+
+  .receipt-item-name {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+  }
+
+  .receipt-total-row {
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    border-top: 1.5px solid #000 !important;
   }
 }

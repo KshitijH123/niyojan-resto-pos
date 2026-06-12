@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useMemo, useState } from "react";
 import { useData } from "@/lib/store";
 import { Card } from "@/components/ui/card";
@@ -7,14 +8,9 @@ import { Printer } from "lucide-react";
 import { Receipt } from "@/components/receipt";
 import type { Bill } from "@/lib/store";
 
-export const Route = createFileRoute("/_authed/history")({
-  head: () => ({ meta: [{ title: "Bill History — Niyojan Resto" }] }),
-  component: HistoryPage,
-});
-
 type FilterKey = "today" | "yesterday" | "week" | "month" | "all";
 
-function HistoryPage() {
+export default function HistoryPage() {
   const bills = useData((s) => s.bills);
   const settings = useData((s) => s.settings);
   const [filter, setFilter] = useState<FilterKey>("today");
@@ -55,7 +51,7 @@ function HistoryPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6 no-print">
+    <div className="p-2 md:p-6 space-y-4 md:space-y-6 no-print">
       <div>
         <h1 className="text-3xl font-bold">बिल इतिहास</h1>
         <p className="text-muted-foreground">All generated bills</p>
@@ -75,7 +71,7 @@ function HistoryPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">Bills</div>
           <div className="text-2xl font-bold">{filtered.length}</div>

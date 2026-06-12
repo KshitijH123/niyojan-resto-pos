@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState } from "react";
 import { useData } from "@/lib/store";
 import { Card } from "@/components/ui/card";
@@ -6,18 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/_authed/settings")({
-  head: () => ({ meta: [{ title: "Settings — Niyojan Resto" }] }),
-  component: SettingsPage,
-});
-
-function SettingsPage() {
+export default function SettingsPage() {
   const { settings, updateSettings } = useData();
   const [form, setForm] = useState(settings);
   const [saved, setSaved] = useState(false);
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="p-2 md:p-6 max-w-2xl space-y-4 md:space-y-6">
       <div>
         <h1 className="text-3xl font-bold">सेटिंग्ज</h1>
         <p className="text-muted-foreground">Restaurant configuration</p>

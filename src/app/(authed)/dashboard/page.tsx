@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useMemo } from "react";
 import {
   BarChart,
@@ -21,12 +22,7 @@ import {
   CalendarRange,
 } from "lucide-react";
 
-export const Route = createFileRoute("/_authed/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Niyojan Resto" }] }),
-  component: Dashboard,
-});
-
-function Dashboard() {
+export default function Dashboard() {
   const bills = useData((s) => s.bills);
 
   const stats = useMemo(() => {
@@ -85,13 +81,13 @@ function Dashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-2 md:p-6 space-y-4 md:space-y-6">
       <div>
         <h1 className="text-3xl font-bold">डॅशबोर्ड</h1>
         <p className="text-muted-foreground">Overview of your restaurant performance</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
         {cards.map((c) => (
           <Card key={c.en}>
             <CardContent className="p-5">
@@ -112,7 +108,7 @@ function Dashboard() {
             <CardTitle>Weekly Revenue / साप्ताहिक उत्पन्न</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={200} className="md:h-[260px]">
               <LineChart data={daily}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="day" />
@@ -134,7 +130,7 @@ function Dashboard() {
                 No sales data yet. Create a bill to see analytics.
               </p>
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={200} className="md:h-[260px]">
                 <BarChart data={topItems}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />

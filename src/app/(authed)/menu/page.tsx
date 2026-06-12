@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Tag, X, Check } from "lucide-react";
 import { useData } from "@/lib/store";
@@ -15,12 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/_authed/menu")({
-  head: () => ({ meta: [{ title: "Menu — Niyojan Resto" }] }),
-  component: MenuPage,
-});
-
-function MenuPage() {
+export default function MenuPage() {
   const {
     menu,
     categories,
@@ -82,18 +78,18 @@ function MenuPage() {
   }, {});
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-2 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">मेनू व्यवस्थापन</h1>
-          <p className="text-muted-foreground">Manage your menu items and categories</p>
+          <h1 className="text-2xl md:text-3xl font-bold">मेनू व्यवस्थापन</h1>
+          <p className="text-muted-foreground text-sm">Manage your menu items and categories</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setCatOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setCatOpen(true)}>
             <Tag className="size-4 mr-1" /> Categories
           </Button>
-          <Button onClick={startAdd}>
+          <Button size="sm" onClick={startAdd}>
             <Plus className="size-4 mr-1" /> Add Item
           </Button>
         </div>
