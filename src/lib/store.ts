@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_MENU, DEFAULT_CATEGORIES, type MenuItem } from "./menu-data";
+import { type MenuItem, type Category } from "./menu-data";
 
 export type BillItem = {
   itemId: string;
@@ -14,11 +14,15 @@ export type BillItem = {
 export type Bill = {
   id: string;
   billNo: number;
+  billNumber?: string;
   date: string; // ISO
   customer?: string;
+  customerName?: string;
   items: BillItem[];
   subtotal: number;
   gst: number;
+  gstApplied?: boolean;
+  gstPercentage?: number;
   discount: number;
   total: number;
   paymentType: "Cash" | "UPI" | "Card";
@@ -63,21 +67,27 @@ type DataState = {
   nextBillNo: number;
   settings: Settings;
   categories: string[];
-  addMenuItem: (i: Omit<MenuItem, "id">) => void;
+  categoryEntities: Category[];
+  addMenuItem: (item: MenuItem) => void;
   updateMenuItem: (id: string, patch: Partial<MenuItem>) => void;
   deleteMenuItem: (id: string) => void;
+  setMenuItems: (items: MenuItem[]) => void;
+  setCategoryEntities: (categories: Category[]) => void;
   saveBill: (b: Omit<Bill, "id" | "billNo" | "date">) => Bill;
+  setBills: (bills: Bill[]) => void;
+  addBill: (bill: Bill) => void;
   updateSettings: (s: Partial<Settings>) => void;
-  addCategory: (name: string) => void;
-  renameCategory: (oldName: string, newName: string) => void;
-  deleteCategory: (name: string) => void;
+  addCategory: (category: Category) => void;
+  renameCategory: (id: string, newName: string) => void;
+  deleteCategory: (id: string) => void;
 };
 
 export const useData = create<DataState>()(
   persist(
     (set, get) => ({
-      menu: DEFAULT_MENU,
-      categories: DEFAULT_CATEGORIES,
+      menu: [],
+      categories: [],
+      categoryEntities: [],
       bills: [],
       nextBillNo: 1001,
       settings: {
@@ -87,40 +97,71 @@ export const useData = create<DataState>()(
         gstNumber: "",
         footer: "धन्यवाद! पुन्हा भेट द्या — Thank You, Visit Again",
       },
-      addMenuItem: (i) =>
-        set((s) => ({ menu: [...s.menu, { ...i, id: `m${Date.now()}` }] })),
+      addMenuItem: (item) =>
+        set((s) => ({
+          menu: [...s.menu, item],
+          categories: s.categories.includes(item.category)
+            ? s.categories
+            : [...s.categories, item.category],
+        })),
       updateMenuItem: (id, patch) =>
         set((s) => ({
           menu: s.menu.map((m) => (m.id === id ? { ...m, ...patch } : m)),
         })),
       deleteMenuItem: (id) =>
         set((s) => ({ menu: s.menu.filter((m) => m.id !== id) })),
+      setMenuItems: (items) =>
+        set(() => ({ menu: items })),
+      setCategoryEntities: (categories) =>
+        set(() => ({
+          categoryEntities: categories,
+          categories: categories.map((category) => category.name),
+        })),
       saveBill: (b) => {
         const billNo = get().nextBillNo;
         const bill: Bill = {
           ...b,
           id: `b${Date.now()}`,
           billNo,
+          billNumber: `BILL-${String(billNo).padStart(4, "0")}`,
+          gstApplied: b.gst > 0,
+          gstPercentage: b.gst > 0 ? 5 : 0,
           date: new Date().toISOString(),
         };
         set((s) => ({ bills: [bill, ...s.bills], nextBillNo: billNo + 1 }));
         return bill;
       },
+      setBills: (bills) => set(() => ({ bills })),
+      addBill: (bill) => set((s) => ({ bills: [bill, ...s.bills] })),
       updateSettings: (s) =>
         set((st) => ({ settings: { ...st.settings, ...s } })),
-      addCategory: (name) =>
+      addCategory: (category) =>
+        set((s) => {
+          const exists = s.categoryEntities.some((item) => item.name === category.name);
+          if (exists) return s;
+          return {
+            categoryEntities: [...s.categoryEntities, category],
+            categories: [...s.categories, category.name],
+          };
+        }),
+      renameCategory: (id, newName) =>
         set((s) => ({
-          categories: s.categories.includes(name) ? s.categories : [...s.categories, name],
+          categoryEntities: s.categoryEntities.map((category) =>
+            category.id === id ? { ...category, name: newName } : category,
+          ),
+          categories: s.categories.map((name) => {
+            const matching = s.categoryEntities.find((category) => category.name === name && category.id === id);
+            return matching ? newName : name;
+          }),
+          menu: s.menu.map((m) =>
+            m.categoryId === id ? { ...m, category: newName, categoryId: id } : m,
+          ),
         })),
-      renameCategory: (oldName, newName) =>
+      deleteCategory: (id) =>
         set((s) => ({
-          categories: s.categories.map((c) => (c === oldName ? newName : c)),
-          menu: s.menu.map((m) => (m.category === oldName ? { ...m, category: newName } : m)),
-        })),
-      deleteCategory: (name) =>
-        set((s) => ({
-          categories: s.categories.filter((c) => c !== name),
-          menu: s.menu.filter((m) => m.category !== name),
+          categoryEntities: s.categoryEntities.filter((category) => category.id !== id),
+          categories: s.categoryEntities.filter((category) => category.id !== id).map((category) => category.name),
+          menu: s.menu.filter((m) => m.categoryId !== id),
         })),
     }),
     { name: "niyojan-data" },

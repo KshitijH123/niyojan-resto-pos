@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, Tag, X, Check } from "lucide-react";
+import { toast } from "sonner";
 import { useData } from "@/lib/store";
-import { type MenuItem } from "@/lib/menu-data";
+import { type Category, type MenuItem } from "@/lib/menu-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -20,13 +21,24 @@ export default function MenuPage() {
   const {
     menu,
     categories,
+    categoryEntities,
     addMenuItem,
     updateMenuItem,
     deleteMenuItem,
     addCategory,
     renameCategory,
     deleteCategory,
+    setMenuItems,
+    setCategoryEntities,
   } = useData();
+
+  const [isCategorySaving, setIsCategorySaving] = useState(false);
+  const [isItemSaving, setIsItemSaving] = useState(false);
+
+  const categoryByName = useMemo(
+    () => Object.fromEntries(categoryEntities.map((category) => [category.name, category.id])),
+    [categoryEntities],
+  );
 
   // ── Item dialog ──
   const [editing, setEditing] = useState<MenuItem | null>(null);
@@ -39,7 +51,14 @@ export default function MenuPage() {
   const [renameVal, setRenameVal] = useState("");
 
   const startAdd = () => {
-    setEditing({ id: "", nameMr: "", nameEn: "", category: categories[0] ?? "", full: 0 });
+    setEditing({
+      id: "",
+      nameMr: "",
+      nameEn: "",
+      category: categories[0] ?? "",
+      categoryId: categoryByName[categories[0] ?? ""] ?? "",
+      full: 0,
+    });
     setItemOpen(true);
   };
   const startEdit = (m: MenuItem) => {
@@ -47,30 +66,219 @@ export default function MenuPage() {
     setItemOpen(true);
   };
 
-  const save = () => {
-    if (!editing || !editing.nameMr || !editing.full) return;
-    if (editing.id) {
-      updateMenuItem(editing.id, editing);
-    } else {
-      const { id: _id, ...rest } = editing;
-      addMenuItem(rest);
+  const handleDeleteMenuItem = async (id: string) => {
+    try {
+      const response = await fetch(`/api/menuitems/${id}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Failed to delete menu item.");
+        return;
+      }
+      deleteMenuItem(id);
+      toast.success("Menu item deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete menu item.");
     }
-    setItemOpen(false);
   };
 
-  const handleAddCategory = () => {
+  const save = async () => {
+    if (!editing) return;
+
+    const nameMr = editing.nameMr.trim();
+    const nameEn = editing.nameEn?.trim() ?? "";
+    const categoryName = editing.category.trim();
+    const halfPrice = editing.half;
+    const fullPrice = editing.full;
+
+    if (!nameMr) {
+      toast.error("Marathi name is required.");
+      return;
+    }
+    if (!categoryName) {
+      toast.error("Category is required.");
+      return;
+    }
+    if (fullPrice == null || fullPrice <= 0) {
+      toast.error("Full price is required.");
+      return;
+    }
+
+    const categoryId = categoryByName[categoryName];
+    if (!categoryId) {
+      toast.error("Selected category is not available.");
+      return;
+    }
+
+    setIsItemSaving(true);
+    try {
+      const body = {
+        marathiName: nameMr,
+        englishName: nameEn,
+        categoryId,
+        categoryName,
+        halfPrice,
+        fullPrice,
+      };
+      const response = await fetch(editing.id ? `/api/menuitems/${editing.id}` : "/api/menuitems", {
+        method: editing.id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Failed to save menu item.");
+        return;
+      }
+
+      const item: MenuItem = {
+        id: result.id,
+        nameMr: result.nameMr,
+        nameEn: result.nameEn,
+        category: result.category,
+        categoryId: result.categoryId,
+        half: result.half,
+        full: result.full,
+        createdAt: result.createdAt,
+      };
+
+      if (editing.id) {
+        updateMenuItem(editing.id, item);
+        toast.success("Menu item updated successfully.");
+      } else {
+        addMenuItem(item);
+        toast.success("Menu item created successfully.");
+      }
+
+      setItemOpen(false);
+      setEditing(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save menu item.");
+    } finally {
+      setIsItemSaving(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
     const name = newCat.trim();
-    if (!name) return;
-    addCategory(name);
-    setNewCat("");
+    if (!name) {
+      toast.error("Category name is required.");
+      return;
+    }
+
+    setIsCategorySaving(true);
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Failed to create category.");
+        return;
+      }
+
+      const category: Category = { id: result.id, name: result.name, createdAt: result.createdAt };
+      addCategory(category);
+      setNewCat("");
+      toast.success("Category saved successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save category.");
+    } finally {
+      setIsCategorySaving(false);
+    }
   };
 
-  const handleRename = (old: string) => {
+  const handleRename = async (old: string) => {
     const val = renameVal.trim();
-    if (!val || val === old) { setRenamingCat(null); return; }
-    renameCategory(old, val);
-    setRenamingCat(null);
+    if (!val || val === old) {
+      setRenamingCat(null);
+      return;
+    }
+
+    const category = categoryEntities.find((item) => item.name === old);
+    if (!category) {
+      toast.error("Category not found.");
+      setRenamingCat(null);
+      return;
+    }
+
+    setIsCategorySaving(true);
+    try {
+      const response = await fetch(`/api/categories/${category.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: val }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Failed to rename category.");
+        return;
+      }
+
+      renameCategory(category.id, val);
+      toast.success("Category renamed successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to rename category.");
+    } finally {
+      setIsCategorySaving(false);
+      setRenamingCat(null);
+    }
   };
+
+  const handleDeleteCategory = async (name: string) => {
+    const category = categoryEntities.find((item) => item.name === name);
+    if (!category) {
+      toast.error("Category not found.");
+      return;
+    }
+
+    setIsCategorySaving(true);
+    try {
+      const response = await fetch(`/api/categories/${category.id}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Failed to delete category.");
+        return;
+      }
+
+      deleteCategory(category.id);
+      toast.success("Category deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete category.");
+    } finally {
+      setIsCategorySaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesResponse, menuResponse] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/menuitems"),
+        ]);
+
+        if (!categoriesResponse.ok || !menuResponse.ok) return;
+
+        const categoriesData: Category[] = await categoriesResponse.json();
+        const menuData: MenuItem[] = await menuResponse.json();
+
+        setCategoryEntities(categoriesData);
+        setMenuItems(menuData);
+      } catch (error) {
+        console.error("Failed to load menu data", error);
+      }
+    };
+
+    loadData();
+  }, [setCategoryEntities, setMenuItems]);
 
   const grouped = menu.reduce<Record<string, MenuItem[]>>((acc, m) => {
     (acc[m.category] ||= []).push(m);
@@ -133,7 +341,7 @@ export default function MenuPage() {
                     <Button size="icon" variant="ghost" onClick={() => startEdit(m)}>
                       <Pencil className="size-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => deleteMenuItem(m.id)}>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteMenuItem(m.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </div>
@@ -164,7 +372,7 @@ export default function MenuPage() {
                     <Button size="icon" variant="ghost" onClick={() => startEdit(m)}>
                       <Pencil className="size-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => deleteMenuItem(m.id)}>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteMenuItem(m.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </div>
@@ -193,7 +401,7 @@ export default function MenuPage() {
                   onChange={(e) => setNewCat(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
                 />
-                <Button onClick={handleAddCategory}>
+                <Button onClick={handleAddCategory} disabled={isCategorySaving}>
                   <Plus className="size-4" />
                 </Button>
               </div>
@@ -235,11 +443,11 @@ export default function MenuPage() {
                       >
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button
+                                      <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => deleteCategory(cat)}
-                        disabled={categories.length <= 1}
+                        onClick={() => handleDeleteCategory(cat)}
+                        disabled={categories.length <= 1 || isCategorySaving}
                       >
                         <Trash2 className="size-3.5 text-destructive" />
                       </Button>
@@ -300,8 +508,8 @@ export default function MenuPage() {
                   />
                 </div>
               </div>
-              <Button className="w-full" onClick={save}>
-                Save
+              <Button className="w-full" onClick={save} disabled={isItemSaving}>
+                {isItemSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           )}
