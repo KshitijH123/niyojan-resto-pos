@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const name = String(body?.name ?? "").trim();
     if (!name) {
@@ -11,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const db = await getDb();
-    const categoryId = params.id;
+    const categoryId = id;
     if (!ObjectId.isValid(categoryId)) {
       return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
     }
@@ -26,26 +27,32 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       { $set: { name } },
       { returnDocument: "after" },
     );
+    
+    const updatedCategory = result as any; // Cast to avoid 'possibly null' issues if we know it was found
 
-    if (!result.value) {
+    if (!updatedCategory) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
+    
+    // Some drivers return the document directly, some return an object with 'value'
+    const doc = updatedCategory.value || updatedCategory;
 
     await db.collection("menuitems").updateMany(
       { categoryId: categoryId },
       { $set: { categoryName: name } },
     );
 
-    return NextResponse.json({ id: result.value._id.toString(), name: result.value.name, createdAt: result.value.createdAt }, { status: 200 });
+    return NextResponse.json({ id: doc._id.toString(), name: doc.name, createdAt: doc.createdAt }, { status: 200 });
   } catch (error) {
     console.error("PUT /api/categories/:id error", error);
     return NextResponse.json({ error: "Failed to update category" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const categoryId = params.id;
+    const { id } = await params;
+    const categoryId = id;
     if (!ObjectId.isValid(categoryId)) {
       return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
     }

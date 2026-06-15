@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await request.json();
-    const itemId = params.id;
+    const itemId = id;
 
     if (!ObjectId.isValid(itemId)) {
       return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
@@ -47,20 +48,24 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       { returnDocument: "after" },
     );
 
-    if (!result.value) {
+    const updatedItem = result as any;
+
+    if (!updatedItem) {
       return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
     }
 
+    const doc = updatedItem.value || updatedItem;
+
     return NextResponse.json(
       {
-        id: result.value._id.toString(),
-        nameMr: result.value.marathiName,
-        nameEn: result.value.englishName,
-        category: result.value.categoryName,
-        categoryId: result.value.categoryId,
-        half: result.value.halfPrice,
-        full: result.value.fullPrice,
-        createdAt: result.value.createdAt,
+        id: doc._id.toString(),
+        nameMr: doc.marathiName,
+        nameEn: doc.englishName,
+        category: doc.categoryName,
+        categoryId: doc.categoryId,
+        half: doc.halfPrice,
+        full: doc.fullPrice,
+        createdAt: doc.createdAt,
       },
       { status: 200 },
     );
@@ -70,9 +75,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const itemId = params.id;
+    const { id } = await params;
+    const itemId = id;
     if (!ObjectId.isValid(itemId)) {
       return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
     }

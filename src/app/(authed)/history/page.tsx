@@ -126,11 +126,11 @@ export default function HistoryPage() {
 
     // Summary Cards
     doc.setFontSize(11);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
     doc.text("Report Summary", leftMargin, yPos);
     yPos += 7;
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     const totalGst = list.reduce((s, b) => s + (b.gst || 0), 0);
     const totalDiscount = list.reduce((s, b) => s + (b.discount || 0), 0);
@@ -145,7 +145,7 @@ export default function HistoryPage() {
 
     // Manual Table Implementation
     doc.setFontSize(9);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     
     const colWidths = [25, 25, 25, 15, 20, 12, 18, 20];
     const headers = ["Bill No", "Date", "Customer", "Items", "Payment", "GST", "Discount", "Total"];
@@ -164,7 +164,7 @@ export default function HistoryPage() {
     });
     
     yPos += 8;
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 0, 0);
     
     // Draw rows
@@ -201,7 +201,7 @@ export default function HistoryPage() {
 
     // Grand Total Section
     doc.setFontSize(9);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
     doc.text("----------------------------------------", leftMargin, yPos);
     yPos += lineHeight + 2;

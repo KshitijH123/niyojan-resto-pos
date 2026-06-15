@@ -144,19 +144,21 @@ export async function POST(request: Request) {
 
     const db = await getDb();
     const updateResult = await db.collection("billCounter").findOneAndUpdate(
-      { _id: "billCounter" },
+      { _id: "billCounter" as any },
       { $inc: { lastBillNumber: 1 } },
       { upsert: true, returnDocument: "after" },
     );
 
-    let sequence = updateResult.value?.lastBillNumber;
+    const counter = updateResult as any;
+    let sequence = (counter?.value?.lastBillNumber) ?? (counter?.lastBillNumber);
+
     if (typeof sequence !== "number") {
-      const counterDoc = await db.collection("billCounter").findOne({ _id: "billCounter" });
+      const counterDoc = await db.collection("billCounter").findOne({ _id: "billCounter" as any });
       sequence = counterDoc?.lastBillNumber ?? 1;
       if (typeof sequence !== "number") {
         sequence = 1;
         await db.collection("billCounter").updateOne(
-          { _id: "billCounter" },
+          { _id: "billCounter" as any },
           { $set: { lastBillNumber: sequence } },
           { upsert: true },
         );
