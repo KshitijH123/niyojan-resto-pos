@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
     const id = params.id;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid bill ID" }, { status: 400 });
@@ -57,8 +58,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
     const id = params.id;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid bill ID" }, { status: 400 });

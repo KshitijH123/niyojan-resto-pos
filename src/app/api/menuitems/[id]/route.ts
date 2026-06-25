@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
     const body = await request.json();
+    const params = await context.params;
     const itemId = params.id;
 
     if (!ObjectId.isValid(itemId)) {
@@ -47,7 +48,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       { returnDocument: "after" },
     );
 
-    if (!result.value) {
+    if (!result || !result.value) {
       return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
     }
 
@@ -70,8 +71,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
     const itemId = params.id;
     if (!ObjectId.isValid(itemId)) {
       return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });

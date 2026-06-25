@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
     const body = await request.json();
     const name = String(body?.name ?? "").trim();
@@ -11,6 +11,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const db = await getDb();
+    const params = await context.params;
     const categoryId = params.id;
     if (!ObjectId.isValid(categoryId)) {
       return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
@@ -27,7 +28,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       { returnDocument: "after" },
     );
 
-    if (!result.value) {
+    if (!result || !result.value) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
@@ -43,8 +44,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
+    const params = await context.params;
     const categoryId = params.id;
     if (!ObjectId.isValid(categoryId)) {
       return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });

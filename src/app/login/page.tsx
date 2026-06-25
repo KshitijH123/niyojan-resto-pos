@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthed } = useAuth();
-  const [u, setU] = useState("admin");
-  const [p, setP] = useState("admin");
+  const [u, setU] = useState("");
+  const [p, setP] = useState("");
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -32,9 +32,9 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Card with Glassmorphism */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
-          <div className="flex flex-col items-center mb-8">
-            <div className="size-84 mb-2 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500">
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20">
+          <div className="flex flex-col items-center mb-6">
+            <div className="size-64 mb-2 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500">
               <img 
                 src="/niyojan-logo.png" 
                 alt="Niyojan Resto Logo" 
@@ -44,31 +44,41 @@ export default function LoginPage() {
           </div>
 
           <form
-            className="space-y-6"
-            onSubmit={(e) => {
+            className="space-y-4"
+            onSubmit={async (e) => {
               e.preventDefault();
-              if (login(u, p)) router.push("/dashboard");
-              else setErr("Invalid credentials");
+              const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: u, password: p }),
+              });
+              const data = await res.json();
+              if (data.success) {
+                login(u, p);
+                router.push("/dashboard");
+              } else {
+                setErr("Invalid email or password");
+              }
             }}
           >
-            <div className="space-y-2">
-              <Label htmlFor="u" className="text-white/80 ml-1">वापरकर्तानाव / Username</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="u" className="text-white/80 ml-1 text-sm">वापरकर्तानाव / Username</Label>
               <Input 
                 id="u" 
                 value={u} 
                 onChange={(e) => setU(e.target.value)} 
                 autoFocus 
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 rounded-xl focus:bg-white/10 transition-all"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-10 rounded-xl focus:bg-white/10 transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="p" className="text-white/80 ml-1">पासवर्ड / Password</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="p" className="text-white/80 ml-1 text-sm">पासवर्ड / Password</Label>
               <Input
                 id="p"
                 type="password"
                 value={p}
                 onChange={(e) => setP(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 rounded-xl focus:bg-white/10 transition-all"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-10 rounded-xl focus:bg-white/10 transition-all"
               />
             </div>
             
@@ -78,16 +88,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full h-14 text-lg font-bold rounded-xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" className="w-full h-11 text-base font-semibold rounded-xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all bg-accent hover:bg-accent/90 text-accent-foreground">
               लॉगिन / Login
             </Button>
             
-            <div className="pt-4 flex flex-col items-center gap-1">
-              <p className="text-[10px] text-white/30 uppercase tracking-tighter">
-                Secure Access Portal
-              </p>
-              <p className="text-xs text-white/40 italic">
-                Demo: any non-empty username & password
+            <div className="pt-2 flex flex-col items-center gap-1">
+              <p className="text-xs text-white/50 text-center">
+                Developed with ❤️ by <a href="https://www.instagram.com/zyntratechno?igsh=bHNyN2F3ZGlnMzMw" target="_blank" rel="noopener noreferrer" className="font-bold text-white/70 hover:text-white/90 transition-colors">Zyntra Technologies</a>
               </p>
             </div>
           </form>
