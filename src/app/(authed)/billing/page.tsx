@@ -369,8 +369,8 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-[420px] self-start lg:sticky lg:top-4">
-        <Card className="p-5 space-y-4 overflow-hidden">
+      <div className="w-full max-w-[420px] self-start lg:sticky lg:top-4 h-full overflow-hidden">
+        <Card className="p-5 space-y-4 h-full overflow-y-auto hide-scrollbar">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">बिल सारांश</h2>
           <Button size="sm" variant="ghost" onClick={clear}>
